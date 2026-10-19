@@ -145,7 +145,7 @@ unset: a section hides or the sample is shown.
   (tabs پسندیده‌ها / خبرم کن / بازدیدها). The product page's buttons and the unavailable
   card's «خبرم کن» use the same lists, so a card and its page always agree. No alert is
   actually sent in the prototype.
-- **Back on the product page (and category results)**: the 44×44 back from the Figma
+- **Back on the product page and every results page** (search and category): the 44×44 back from the Figma
   results header («Back (44×44 tap target)»), placed right of Torob's search box. The search
   box itself is unchanged. Back goes to the previous in-app page, or home when the link was
   opened directly.

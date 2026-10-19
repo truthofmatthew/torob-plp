@@ -202,7 +202,7 @@ export default function SearchPage({
         value={input}
         onChange={setInput}
         onSubmit={() => setQuery(input.trim())}
-        onBack={initialCategory ? goBack : undefined}
+        onBack={goBack}
       />
 
       <main className={s.main}>

@@ -4,7 +4,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 392px;
+  /* Fills its grid cell, so cards in a row match the tallest one. The seller
+     section takes its content's height instead of Figma's fixed 116px, which
+     left most cards with an empty band at the bottom. */
+  height: 100%;
   overflow: clip;
   background: var(--color-surface-card);
   border: 1px solid var(--color-border-subtle);
@@ -169,8 +172,7 @@
 .seller {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  height: 116px;
+  flex: 1 0 auto;
   padding: 12px var(--space-12) var(--space-12);
   overflow: clip;
   border-top: 1px solid var(--color-border-subtle);
@@ -220,7 +222,7 @@
   display: flex;
   gap: var(--space-4);
   align-items: flex-start;
-  height: 40px;
+  max-height: 40px;
   margin-top: 6px;
   overflow: clip;
 }
