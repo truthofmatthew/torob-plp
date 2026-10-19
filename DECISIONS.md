@@ -137,3 +137,19 @@ New env vars, all server-side: `TOROB_SIMILAR_URL`, `TOROB_PRICE_CHART_URL`,
 `TOROB_CATEGORY_URL`, `TOROB_OFFERS_URL`, `TOROB_TRENDS_URL`. Each degrades gracefully when
 unset: a section hides or the sample is shown.
 - Functions run in `fra1` (Frankfurt), the closest Vercel region to Torob, which cuts upstream latency and timeouts.
+
+## Card actions, back, images (v3)
+- **Like + notify on every card**, as on torob.com: a heart and a bell as two 32px round
+  buttons (44px hit area) in the image's top-right corner, away from the «آگهی» badge
+  (top-left). They don't open the card. Both are saved on the device and listed in «ترب من»
+  (tabs پسندیده‌ها / خبرم کن / بازدیدها). The product page's buttons and the unavailable
+  card's «خبرم کن» use the same lists, so a card and its page always agree. No alert is
+  actually sent in the prototype.
+- **Back on the product page (and category results)**: the 44×44 back from the Figma
+  results header («Back (44×44 tap target)»), placed right of Torob's search box. The search
+  box itself is unchanged. Back goes to the previous in-app page, or home when the link was
+  opened directly.
+- **Images**: cards load Torob's resized `…_/0x280.webp` (the gallery `0x720`, trend chips
+  `0x64`) instead of 1000px+ originals. Several cards rendered blank when a grid requested
+  24 originals at once. If a thumbnail fails, the card tries the original once, then shows
+  «بدون تصویر».
