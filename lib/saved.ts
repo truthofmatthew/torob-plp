@@ -3,13 +3,18 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { Offer, SavedProduct } from "./types";
 
-// Likes and recently viewed, kept on this device only (no login in the
+// Likes, alerts and recently viewed, kept on this device only (no login in the
 // prototype). Every read/write is guarded: private mode or blocked storage
 // just means an empty list.
 
-export type SavedKind = "likes" | "history";
-const KEY: Record<SavedKind, string> = { likes: "torob-plp:likes", history: "torob-plp:history" };
-const LIMIT: Record<SavedKind, number> = { likes: 200, history: 40 };
+/** likes = «پسندیده‌ها», alerts = «خبرم کن» (price/stock watch), history = recently viewed. */
+export type SavedKind = "likes" | "alerts" | "history";
+const KEY: Record<SavedKind, string> = {
+  likes: "torob-plp:likes",
+  alerts: "torob-plp:alerts",
+  history: "torob-plp:history",
+};
+const LIMIT: Record<SavedKind, number> = { likes: 200, alerts: 200, history: 40 };
 const EMPTY: SavedProduct[] = [];
 
 const listeners = new Set<() => void>();

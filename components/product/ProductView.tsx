@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { faDigits, faPrice } from "@/lib/format";
 import { toSaved, useSaved } from "@/lib/saved";
 import type { Offer, ProductPage } from "@/lib/types";
+import SaveActions from "@/components/SaveActions";
 import Gallery from "./Gallery";
 import PriceChart from "./PriceChart";
 import SellerList from "./SellerList";
@@ -16,9 +17,7 @@ import s from "./product.module.css";
 // and the card's seller language.
 
 export default function ProductView({ p }: { p: ProductPage }) {
-  const likes = useSaved("likes");
   const history = useSaved("history");
-  const [notify, setNotify] = useState(false);
   const [shared, setShared] = useState(false);
 
   const snapshot: Pick<Offer, "id" | "title" | "imageUrl" | "minPrice" | "storeCount" | "available"> = {
@@ -29,7 +28,6 @@ export default function ProductView({ p }: { p: ProductPage }) {
     storeCount: p.onlineCount,
     available: p.available,
   };
-  const liked = likes.has(p.id);
 
   // Record the visit once per product.
   const { add: addHistory } = history;
@@ -81,35 +79,7 @@ export default function ProductView({ p }: { p: ProductPage }) {
         {p.subtitle && <p className={s.subtitle}>{p.subtitle}</p>}
 
         <div className={s.actions}>
-          <button
-            type="button"
-            className={s.action}
-            aria-pressed={liked}
-            onClick={() => (liked ? likes.remove(p.id) : likes.add(toSaved(snapshot)))}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
-              <path
-                d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10z"
-                fill={liked ? "var(--color-brand-primary)" : "none"}
-                stroke={liked ? "var(--color-brand-primary)" : "currentColor"}
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>{liked ? "پسندیده شد" : "پسندیدن"}</span>
-          </button>
-          <button type="button" className={s.action} aria-pressed={notify} onClick={() => setNotify((v) => !v)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M6 10a6 6 0 1 1 12 0v4l2 3H4l2-3v-4zM10 20a2 2 0 0 0 4 0"
-                stroke={notify ? "var(--color-brand-primary)" : "currentColor"}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>{notify ? "اطلاع از کاهش قیمت" : "خبرم کن"}</span>
-          </button>
+          <SaveActions product={snapshot} variant="page" />
           <button type="button" className={s.action} onClick={share}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path

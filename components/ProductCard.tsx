@@ -5,6 +5,9 @@ import { useState } from "react";
 import { faDigits, faPrice } from "@/lib/format";
 import type { CardState, FeaturedSeller, Offer } from "@/lib/types";
 import Icon from "./Icon";
+import SaveActions from "./SaveActions";
+import { thumb } from "@/lib/img";
+import { toSaved, useSaved } from "@/lib/saved";
 import s from "./ProductCard.module.css";
 
 // Figma ProductCard (206:880): 6 states, all 392px tall. Media 148 · Body 126 ·
@@ -55,8 +58,10 @@ function LoadedCard({
   featured: FeaturedSeller | null | undefined;
   position: number;
 }) {
-  const [notified, setNotified] = useState(false);
-  const [imgFailed, setImgFailed] = useState(false);
+  const alerts = useSaved("alerts");
+  const notified = alerts.has(offer.id);
+  // 0 = thumbnail, 1 = original (thumb failed), 2 = give up → «بدون تصویر».
+  const [imgTry, setImgTry] = useState(0);
   const state = stateOf(offer, featured);
   const seller = featured?.seller ?? null;
   // No seller data (upstream down and not in the sample): say how many sellers
@@ -82,7 +87,8 @@ function LoadedCard({
         ? ""
         : LABEL[state];
   const ariaLabel = `${offer.title}، ${priceText} تومان${sellerName ? `، ${labelText.replace(":", "")} ${sellerName}` : ""}`;
-  const showImage = offer.imageUrl && !imgFailed;
+  const imgSrc = imgTry === 0 ? thumb(offer.imageUrl, 280) : offer.imageUrl;
+  const showImage = imgSrc && imgTry < 2;
 
   return (
     <article className={s.card} data-state={state}>
@@ -92,11 +98,12 @@ function LoadedCard({
         {showImage ? (
           <img
             className={s.image}
-            src={offer.imageUrl!}
+            key={imgSrc}
+            src={imgSrc!}
             alt=""
             loading="lazy"
             decoding="async"
-            onError={() => setImgFailed(true)}
+            onError={() => setImgTry((t) => t + 1)}
           />
         ) : (
           <div className={s.noImage}>
@@ -105,6 +112,7 @@ function LoadedCard({
           </div>
         )}
         {offer.isAd && <span className={s.adBadge}>آگهی</span>}
+        <SaveActions product={offer} variant="card" />
       </div>
 
       <div className={s.body}>
@@ -136,7 +144,7 @@ function LoadedCard({
                   type="button"
                   className={s.notify}
                   aria-pressed={notified}
-                  onClick={() => setNotified(true)}
+                  onClick={() => (notified ? alerts.remove(offer.id) : alerts.add(toSaved(offer)))}
                 >
                   <Icon name="bell" size={14} />
                   <span>{notified ? "موجود شد خبرتان می‌کنیم" : "خبرم کن"}</span>

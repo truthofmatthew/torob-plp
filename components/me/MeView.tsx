@@ -7,14 +7,26 @@ import { faDigits } from "@/lib/format";
 import { savedToOffer, useSaved } from "@/lib/saved";
 import s from "./me.module.css";
 
-// «ترب من» without login: likes and recently viewed live on this device.
+// «ترب من» without login: likes, alerts and recently viewed live on this device.
+
+const EMPTY = {
+  likes: { title: "هنوز کالایی نپسندیده‌اید", text: "قلبِ روی کارت یا صفحه‌ی کالا را بزنید تا اینجا بماند." },
+  alerts: {
+    title: "هنوز «خبرم کن» فعال نیست",
+    text: "زنگوله‌ی روی کارت را بزنید تا کالا اینجا بماند. در این نمونه اعلانی ارسال نمی‌شود.",
+  },
+  history: { title: "هنوز کالایی ندیده‌اید", text: "کالاهایی که باز می‌کنید اینجا جمع می‌شوند." },
+} as const;
+
 export default function MeView() {
   const params = useSearchParams();
   const router = useRouter();
-  const tab = params.get("tab") === "history" ? "history" : "likes";
+  const raw = params.get("tab");
+  const tab = raw === "history" || raw === "alerts" ? raw : "likes";
   const likes = useSaved("likes");
+  const alerts = useSaved("alerts");
   const history = useSaved("history");
-  const active = tab === "likes" ? likes : history;
+  const active = tab === "likes" ? likes : tab === "alerts" ? alerts : history;
 
   return (
     <>
@@ -28,7 +40,7 @@ export default function MeView() {
         </div>
         <div>
           <p className={s.name}>کاربر مهمان</p>
-          <p className={s.hint}>بدون ورود؛ پسندیده‌ها و بازدیدها فقط روی همین دستگاه ذخیره می‌شوند.</p>
+          <p className={s.hint}>بدون ورود؛ پسندیده‌ها، «خبرم کن»ها و بازدیدها فقط روی همین دستگاه ذخیره می‌شوند.</p>
         </div>
       </div>
 
@@ -36,7 +48,8 @@ export default function MeView() {
         {(
           [
             ["likes", "پسندیده‌ها", likes.list.length],
-            ["history", "بازدیدهای اخیر", history.list.length],
+            ["alerts", "خبرم کن", alerts.list.length],
+            ["history", "بازدیدها", history.list.length],
           ] as const
         ).map(([id, label, n]) => (
           <button
@@ -45,7 +58,7 @@ export default function MeView() {
             role="tab"
             aria-selected={tab === id}
             className={s.tab}
-            onClick={() => router.replace(id === "likes" ? "/me" : "/me?tab=history", { scroll: false })}
+            onClick={() => router.replace(id === "likes" ? "/me" : `/me?tab=${id}`, { scroll: false })}
           >
             {label} {n > 0 && <span className={s.count}>{faDigits(n)}</span>}
           </button>
@@ -54,12 +67,8 @@ export default function MeView() {
 
       {active.list.length === 0 ? (
         <div className={s.empty}>
-          <p className={s.emptyTitle}>{tab === "likes" ? "هنوز کالایی نپسندیده‌اید" : "هنوز کالایی ندیده‌اید"}</p>
-          <p className={s.emptyText}>
-            {tab === "likes"
-              ? "در صفحه‌ی هر کالا، «پسندیدن» را بزنید تا اینجا بماند."
-              : "کالاهایی که باز می‌کنید اینجا جمع می‌شوند."}
-          </p>
+          <p className={s.emptyTitle}>{EMPTY[tab].title}</p>
+          <p className={s.emptyText}>{EMPTY[tab].text}</p>
           <Link href="/" className={s.cta}>
             جست‌وجوی کالا
           </Link>
@@ -69,7 +78,7 @@ export default function MeView() {
           <div className={s.toolbar}>
             <span>{faDigits(active.list.length)} کالا</span>
             <button type="button" onClick={active.clear}>
-              {tab === "likes" ? "حذف همه" : "پاک کردن تاریخچه"}
+              {tab === "history" ? "پاک کردن تاریخچه" : "حذف همه"}
             </button>
           </div>
           <ProductGrid offers={active.list.map(savedToOffer)} />
