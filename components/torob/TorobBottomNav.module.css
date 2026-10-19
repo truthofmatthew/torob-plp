@@ -1,0 +1,46 @@
+/* Values measured from torob.com mobile (375px), 2026-10-19. */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--torob-nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background-color: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  z-index: 12;
+}
+
+.list {
+  display: flex;
+  justify-content: space-around;
+  height: 58px;
+  margin: 0 0 10px;
+}
+
+.item {
+  flex: 1 1 0;
+  height: 58px;
+}
+
+.link {
+  display: block;
+  height: 58px;
+  padding: 5px 0 7px;
+  text-align: center;
+  color: #1e293b;
+}
+
+.icon {
+  display: inline-block;
+  width: 24px;
+  height: 30.5px;
+}
+
+.label {
+  height: 15.5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 15.5px;
+  color: #1e293b;
+}
