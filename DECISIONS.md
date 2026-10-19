@@ -94,3 +94,44 @@ never authenticity. An ad never carries the recommended label.
 ## Not wired (from the handoff)
 Analytics events `plp_card_view`, `plp_card_click {state, position}`, `plp_seller_click
 {seller_id, is_recommended}`, `plp_notify_me`. «خبرم کن» only changes its own text and saves nothing.
+
+## Pages beyond the PLP (v2)
+The brief grew from "the results page" to "recreate Torob's UI for whatever is needed".
+Only the results card has a Figma design, so the other pages follow **Torob's current
+structure and URLs**, drawn with the same tokens and the card's seller language. Torob's
+header, bottom nav and inner-page title bar are copied unchanged (measured on torob.com).
+
+- **Bottom nav** routes inside the prototype. As on torob.com, only the home tab turns red
+  (`rgb(215,0,64)`) and only on `/`. Every other tab stays dark everywhere.
+- **Home (`/`)**: Torob's logo and home search box (48px, gray icon), then trending searches
+  (`search-trends`), the first 8 root categories, the first special-offers row, and recently
+  viewed from this device. Torob's service tiles (gold, TorobPay, nearby) belong to other
+  products and were left out. A one-line footer says this is a prototype, not official
+  Torob. It is static and rebuilt every 5 min, so visits don't each cost three upstream calls.
+- **Product (`/p/[id]`)** follows Torob's order: gallery → title + actions → buy box →
+  sellers → specs → price history → similar.
+  - The buy box uses the **same featured-seller rule as the card**: the big number is the
+    lowest price, and the button names the featured seller with its own price
+    («خرید با ضمانت ترب» when eligible).
+  - Sellers: online / in-person tabs with Torob's counts, a «دارای ضمانت ترب» filter and
+    «ارزان‌ترین اول». Rows show Torob's own score text verbatim (we never compute one), the
+    seller's listing title, delivery notes and «به‌روزرسانی قیمت». The featured seller's row
+    is tinted.
+  - Price history: two series (lowest, median) on one axis with a legend, end ticks, a
+    crosshair tooltip with Jalali dates, and a table view. Colors were validated with the
+    dataviz checker for CVD/contrast in light (`#c4223a` / `#2b6cd4`) and dark
+    (`#e8495f` / `#4c8ff0`). Torob's "quiet stretch" points are expanded so flat periods stay flat.
+  - Similar products: a horizontal rail of the redesigned card.
+- **Categories**: Torob's list (icon, title, chevron, 56px rows). A category with children
+  opens its child list, which has an «همه‌ی کالاهای …» row; a leaf opens `/browse/[id]`, the
+  same PLP preset to that category.
+- **Special offers**: Torob's titled rows as card rails. Banner-type rows (no products) are skipped.
+- **ترب من**: Torob's needs OTP login, which is out of scope. Here likes (from the product
+  page) and recently viewed (recorded on every product visit) are kept in localStorage, with
+  every access guarded so private mode just shows the empty state.
+- **Not built**: the product guide (wiki), Q&A, the TorobPay/installment flows, shop pages,
+  price-drop alerts for real («خبرم کن» only toggles), and search-by-image/voice.
+
+New env vars, all server-side: `TOROB_SIMILAR_URL`, `TOROB_PRICE_CHART_URL`,
+`TOROB_CATEGORY_URL`, `TOROB_OFFERS_URL`, `TOROB_TRENDS_URL`. Each degrades gracefully when
+unset: a section hides or the sample is shown.

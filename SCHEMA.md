@@ -78,3 +78,20 @@ Same seller fields (`shop_name`, `shop_name2`, `price`, `is_price_unreliable`) p
 The fallback is your 2026-10-13 capture (Tabriz). It has `plp.{bearing,disc}[]` with the same item
 fields as `results[]`, and `product_details[prk]` with `online[]` (uses `torob_guarantee:
 "enabled"` instead of `guarantee_info`) and `instore[]`. `normalizeDetails` reads both shapes.
+
+## Added for the other pages
+
+| Env | Params | Shape used |
+|---|---|---|
+| `TOROB_SIMILAR_URL` | `prk`, `limit` | `{results[]}`, same item shape as search |
+| `TOROB_PRICE_CHART_URL` | `prk`, `v=2` | `{lines, points[{date, lowest, median, stretch?:"quiet", until?}]}` |
+| `TOROB_CATEGORY_URL` | `catid` (0 = root) | `{category{id,title,category_parent}, children[{id,title,icon,image,has_children,status}]}` |
+| `TOROB_OFFERS_URL` | `page` | `{results[{type, data[{title,description,api_url(cat_ids=…)}], base_products[]}], next}` |
+| `TOROB_TRENDS_URL` | none | `[{query, category_id, partial_info(search item)}]` |
+
+Product details fields used by the product page: `media_urls[]`, `image_urls[{urls[]}]`,
+`breadcrumbs[{title,cat_id}]`, `key_specs[{items[{key,value[]}]}]`,
+`structural_specs.headers[{header,specs{}}]`, `min_price`, `max_price`, `availability`,
+`products_info.count`, `products_in_store_info.count`. Per seller: `name1` (listing title),
+`score_info.score_text`, `more_info.{payment_on_delivery,same_day_delivery}`,
+`last_price_change_date`, `button_text`. Per store: `address`, `working_hours.title{status,text}`.
