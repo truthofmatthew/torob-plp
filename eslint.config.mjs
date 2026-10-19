@@ -18,7 +18,13 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      ".cache/**",
     ],
+  },
+  {
+    // Product images come straight from image.torob.com at many sizes; plain
+    // <img> with lazy loading avoids proxying third-party images through Vercel.
+    rules: { "@next/next/no-img-element": "off" },
   },
 ];
 

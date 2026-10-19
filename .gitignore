@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local response cache
+/.cache
+!.env.example
+/.claude
+/scripts/raw
