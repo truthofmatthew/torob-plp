@@ -45,3 +45,18 @@ export function sampleSearch(query: string, page: number) {
 export function sampleDetails(id: string): Raw | null {
   return data.product_details[id] ?? null;
 }
+
+/** The captured PLP item for a product (title, image, price), if any. */
+export function sampleCard(id: string): Raw | null {
+  for (const items of Object.values(data.plp)) {
+    const hit = items.find((i) => i.random_key === id);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** Captured products other than `id`, as search results (for "similar" offline). */
+export function sampleSimilar(id: string) {
+  const key = Object.entries(data.plp).find(([, items]) => items.some((i) => i.random_key === id))?.[0] ?? "disc";
+  return normalizeSearch({ results: (data.plp[key] ?? []).filter((i) => i.random_key !== id).slice(0, 12) });
+}

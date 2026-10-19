@@ -17,7 +17,16 @@ const CACHE_DIR = process.env.VERCEL ? "/tmp/.cache" : path.join(process.cwd(), 
 
 export class UpstreamUnavailable extends Error {}
 
-export function endpoint(name: "TOROB_SEARCH_URL" | "TOROB_DETAILS_URL"): URL {
+export type EndpointName =
+  | "TOROB_SEARCH_URL"
+  | "TOROB_DETAILS_URL"
+  | "TOROB_SIMILAR_URL"
+  | "TOROB_PRICE_CHART_URL"
+  | "TOROB_CATEGORY_URL"
+  | "TOROB_OFFERS_URL"
+  | "TOROB_TRENDS_URL";
+
+export function endpoint(name: EndpointName): URL {
   const v = process.env[name];
   if (!v) throw new UpstreamUnavailable(`${name} is not set`);
   return new URL(v);

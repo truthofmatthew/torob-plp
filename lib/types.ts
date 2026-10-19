@@ -19,7 +19,48 @@ export type SellerOffer = {
   distance: string;
   /** Torob's redirect to this seller's offer, when available. */
   offerUrl: string | null;
+  /** Seller's own listing title, e.g. «لنت جلو پراید سبز پارس PL21355M». */
+  offerTitle: string;
+  /** Torob's own score line, verbatim (e.g. «★۵ (۴ سال در ترب)»). Never computed by us. */
+  scoreText: string;
+  /** e.g. «۱۵ روز پیش». */
+  lastChange: string;
+  /** Delivery/payment notes Torob provides (pay on delivery, same-day). */
+  notes: string[];
+  /** In-store only: «باز · تا ۱۹:۰۰» style text and address. */
+  hours: string;
+  address: string;
+  buttonText: string;
 };
+
+export type SpecGroup = { title: string; rows: { key: string; value: string }[] };
+
+/** Everything the product page renders. */
+export type ProductPage = {
+  source: "live" | "cache" | "sample";
+  id: string;
+  title: string;
+  subtitle: string;
+  images: string[];
+  breadcrumbs: { title: string; catId: number }[];
+  minPrice: number;
+  maxPrice: number;
+  available: boolean;
+  online: SellerOffer[];
+  inPerson: SellerOffer[];
+  onlineCount: number;
+  inPersonCount: number;
+  featured: FeaturedSeller | null;
+  keySpecs: { key: string; value: string }[];
+  specs: SpecGroup[];
+  torobUrl: string;
+};
+
+/** Minimal snapshot kept on-device for likes and history. */
+export type SavedProduct = Pick<
+  Offer,
+  "id" | "title" | "imageUrl" | "minPrice" | "storeCount" | "available"
+> & { savedAt: number };
 
 export type CardState =
   | "recommended" // پیشنهاد

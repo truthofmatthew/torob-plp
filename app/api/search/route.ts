@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const onlyAvailable = sp.get("available") === "1";
   const category = Number(sp.get("category")) || 0;
 
-  if (!q) {
+  if (!q && !category) {
     const empty: SearchResponse = {
       source: "live", query: q, page, total: 0, hasMore: false,
       offers: [], sortOptions: [], categories: [],
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = endpoint("TOROB_SEARCH_URL");
-    url.searchParams.set("q", q);
+    if (q) url.searchParams.set("q", q);
     url.searchParams.set("page", String(page));
     url.searchParams.set("size", "24");
     url.searchParams.set("sort", sort || "popularity");
