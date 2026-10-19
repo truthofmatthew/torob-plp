@@ -2,7 +2,7 @@
 
 ## Scope
 - **Recreated:** the search results page (PLP) from Figma page «somehow better» (`206:854`):
-  the 6-state `ProductCard` (`206:880`), the filter chips, the location row (with and without
+  the 6-state `ProductCard` (`181:291`, 164×309: media 148, body 102, seller 57; every size read from the component), the filter chips, the location row (with and without
   a location) and the 2-column grid, in light and dark.
 - **Kept exactly as Torob has it today:** the top search header and the bottom navbar. Both
   were measured from torob.com mobile (DOM + computed styles, 2026-10-19) and copied 1:1 into
@@ -34,7 +34,7 @@ survives endpoint changes.
 
 1. In-person chip on and a priced in-store seller exists → cheapest in-store seller (حضوری).
 2. Only one usable online seller → that seller (فروشنده).
-3. **Recommended** («خرید با ضمانت ترب»). Best score among sellers that are:
+3. **Recommended** (the «پیشنهاد ترب» pill on the card; «خرید با ضمانت ترب» on the product page). Best score among sellers that are:
    - not an ad (and the product card isn't an ad slot either),
    - covered by Torob purchase protection (`guarantee_info.status = enabled`),
    - in stock with a reliable price,
