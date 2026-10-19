@@ -31,7 +31,7 @@ export default async function Home() {
 
         <Link href="/flights" className={f.tile} prefetch={false}>
           <span className={f.tileIcon} aria-hidden>
-            ✈
+            {"\u2708\uFE0E"}
           </span>
           <span className={f.tileText}>
             <span className={f.tileTitle}>ترب بلیت</span>
