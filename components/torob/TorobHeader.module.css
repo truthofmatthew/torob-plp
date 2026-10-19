@@ -11,7 +11,26 @@
   z-index: 11;
 }
 
+/* With a back button the header becomes a row: back (44×44) + search. */
+.header[data-back] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline-start: 4px;
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
 .form {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   height: 40px;

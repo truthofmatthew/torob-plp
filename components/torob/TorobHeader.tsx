@@ -10,11 +10,18 @@ type Props = {
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
+  /** Deeper pages only (product, category results): the Figma header's 44×44 back. */
+  onBack?: () => void;
 };
 
-export default function TorobHeader({ value, onChange, onSubmit }: Props) {
+export default function TorobHeader({ value, onChange, onSubmit, onBack }: Props) {
   return (
-    <header className={s.header}>
+    <header className={s.header} data-back={onBack ? "" : undefined}>
+      {onBack && (
+        <button type="button" className={s.back} onClick={onBack} aria-label="بازگشت">
+          <img src="/icons/arrow-right.svg" width={20} height={20} alt="" />
+        </button>
+      )}
       <form
         className={s.form}
         role="search"

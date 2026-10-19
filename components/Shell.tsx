@@ -9,12 +9,12 @@ export default function Shell({
   header,
   children,
 }: {
-  header: { kind: "search"; initial?: string } | { kind: "title"; title: string; backHref?: string } | { kind: "none" };
+  header: { kind: "search"; initial?: string; back?: boolean } | { kind: "title"; title: string; backHref?: string } | { kind: "none" };
   children: React.ReactNode;
 }) {
   return (
     <>
-      {header.kind === "search" && <SearchHeaderLink initial={header.initial} />}
+      {header.kind === "search" && <SearchHeaderLink initial={header.initial} back={header.back} />}
       <main className={s.main} data-header={header.kind}>
         {header.kind === "title" && <TorobTitleBar title={header.title} backHref={header.backHref} />}
         {children}

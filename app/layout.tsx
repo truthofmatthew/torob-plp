@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
+import { NavTracker } from "@/lib/nav";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({
@@ -25,7 +26,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" className={vazirmatn.variable}>
-      <body>{children}</body>
+      <body>
+        <NavTracker />
+        {children}
+      </body>
     </html>
   );
 }

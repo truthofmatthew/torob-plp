@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFeaturedSellers } from "@/hooks/useFeaturedSellers";
+import { useGoBack } from "@/lib/nav";
 import type { Offer, SearchResponse } from "@/lib/types";
 import FilterBar from "./FilterBar";
 import ProductCard from "./ProductCard";
@@ -35,6 +36,7 @@ export default function SearchPage({
   initialCategory?: number;
   categoryTitle?: string;
 }) {
+  const goBack = useGoBack();
   const [input, setInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<Filters>({
@@ -196,7 +198,12 @@ export default function SearchPage({
 
   return (
     <>
-      <TorobHeader value={input} onChange={setInput} onSubmit={() => setQuery(input.trim())} />
+      <TorobHeader
+        value={input}
+        onChange={setInput}
+        onSubmit={() => setQuery(input.trim())}
+        onBack={initialCategory ? goBack : undefined}
+      />
 
       <main className={s.main}>
         {categoryTitle && (

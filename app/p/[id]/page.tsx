@@ -17,7 +17,7 @@ export default async function ProductRoute({ params }: Props) {
   const p = await getProductPage(id);
   if (!p) notFound();
   return (
-    <Shell header={{ kind: "search" }}>
+    <Shell header={{ kind: "search", back: true }}>
       <ProductView p={p} />
     </Shell>
   );
