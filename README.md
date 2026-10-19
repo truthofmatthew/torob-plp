@@ -32,6 +32,7 @@ in `data/torob-plp-data.json` and says so.
 | `/browse/[id]` | A category's products (same PLP, preset to the category) |
 | `/special-offers` | «پیشنهاد ویژه» rows |
 | `/me` | «ترب من»: likes and recently viewed, stored on this device (no login) |
+| `/flights`, `/flights/search?from=&to=&date=&adults=`, `/flights/[id]` | «ترب بلیت»: flight search (see below) |
 
 ## Layout
 
@@ -50,3 +51,31 @@ components/         ProductCard (6 states), ProductGrid, FilterBar, Sheet, Searc
 components/product  product page sections
 components/torob    Torob's unchanged header, bottom nav and title bar
 ```
+
+## «ترب بلیت»: flights
+
+A second vertical in the same app, reachable from the home tile or `/flights`. It's built
+like the PLP: crawl offers → normalize → rank by intent → explain the pick.
+
+- One card per physical flight, merged from all its offers («در N پیشنهاد»). The source
+  lists the same plane once per charter supplier and fare class.
+- Intent chips (بهترین انتخاب / ارزان‌ترین / سریع‌ترین / قابل استرداد / صبح زود / عصر و شب)
+  re-rank instantly in the browser. Party size is a hard filter on seats.
+- A one-line, field-based reason for every featured fare, and a ±3-day price strip.
+- A one-sentence query («مشهد پنجشنبه صبح، ۳ نفر، بار زیاد») parsed into visible chips.
+
+```
+app/api/flights/search    GET ?from=&to=&date=<Jalali>&adults=&children=&infants=  → merged flights
+app/api/flights/calendar  GET same params → cheapest fare per day, ±3 days
+lib/flights/client.ts     server-only source client (POST + poll, cached via lib/torob.ts)
+lib/flights/normalize.ts  source JSON → FlightGroup/FlightFare, merge, refund tiers
+lib/flights/rank.ts       intents + «بهترین انتخاب» score (pure, named weights)
+lib/flights/explain.ts    the reason line
+lib/flights/parse.ts      sentence → filters
+components/flights/       search form, results, card, flight page
+scripts/capture-flights.mjs  refreshes data/flights-sample.json
+```
+
+Env (server-side only): `FLIGHTS_SEARCH_URL`, `FLIGHTS_CALENDAR_URL`, `FLIGHTS_SELLER_URL`,
+optional `FLIGHTS_SEARCH_HEADERS`. Without them, the captured sample is served with a note.
+Docs: `docs/flights/PROBLEM.md`, `SCHEMA.md`, `DECISIONS.md`, `DEMO.md`.

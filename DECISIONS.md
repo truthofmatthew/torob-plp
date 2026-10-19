@@ -153,3 +153,9 @@ unset: a section hides or the sample is shown.
   `0x64`) instead of 1000px+ originals. Several cards rendered blank when a grid requested
   24 originals at once. If a thumbnail fails, the card tries the original once, then shows
   «بدون تصویر».
+
+## Flights («ترب بلیت», v4)
+A second vertical in the same app, using the same rules: env-only URLs, a ≥1 s queue,
+the 5-min cache, a captured sample fallback, a pure ranking with named weights, ads never
+recommended, and Torob's chrome unchanged. Its decisions live in `docs/flights/DECISIONS.md`.
+`lib/saved.ts` now exposes a generic `useStoredList` that both verticals use.
