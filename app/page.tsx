@@ -94,6 +94,9 @@ export default async function Home() {
         <RecentRail />
 
         <p className={s.disclaimer}>نمونه‌ی بازطراحی برای چالش استخدامی؛ نسخه‌ی رسمی ترب نیست.</p>
+        <a className={s.repo} href="https://github.com/truthofmatthew/torob-plp" target="_blank" rel="noopener noreferrer">
+          کد و مستندات پروژه در GitHub ↗
+        </a>
       </main>
       <TorobBottomNav />
     </>
