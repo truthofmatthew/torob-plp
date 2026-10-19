@@ -1,0 +1,96 @@
+# Decisions
+
+## Scope
+- **Recreated:** the search results page (PLP) from Figma page «somehow better» (`206:854`):
+  the 6-state `ProductCard` (`206:880`), the filter chips, the location row (with and without
+  a location) and the 2-column grid, in light and dark.
+- **Kept exactly as Torob has it today:** the top search header and the bottom navbar. Both
+  were measured from torob.com mobile (DOM + computed styles, 2026-10-19) and copied 1:1 into
+  `components/torob/`: same SVGs, sizes, colors and links. They don't use the redesign tokens
+  and stay light in dark mode, because the brief is "don't change them in any way".
+  The one difference is the font: Torob uses its licensed *IRANYekan*, which we can't
+  ship, so they render in Vazirmatn like the rest of the page.
+- **Cut:** OTP/auth, the product page, voice/image search (the header buttons are inert, as
+  on a logged-out web view), analytics events (the names from the handoff are listed below
+  but not wired), and distance to in-person stores (see Location).
+
+## Data mapping (`lib/normalize.ts`)
+- The main card price is the search `price`, the lowest across stores. The seller section
+  shows **that seller's own price** (Figma rule: «قیمت اصلی = کمترین قیمت؛ قیمت بخش ضمانت
+  = پیشنهاد همان فروشنده»).
+- Store count is parsed from `shop_text` («در ۱۴ فروشگاه» → 14). «در یدک مای» means one seller,
+  and the name is taken from the text, so single-seller cards have a name before details arrive.
+- Unavailable = `price` 0, «ناموجود» in `price_text`, or `price_text_mode: disabled`.
+- Seller data needs the details endpoint (one call per product). Cards render immediately
+  from search, the seller section shows its skeleton, and details are fetched **only for
+  cards in or near the viewport, at most 2 at a time**, so a 24-card page does not fire 24 calls.
+- Duplicate `random_key`s on a page (ad + organic) are dropped. The first (the ad) is kept.
+- When nothing is known about the sellers (upstream down and not in the sample), the
+  seller section says «N فروشنده در ترب» rather than inventing a name.
+
+## The featured-seller rule (`lib/recommend.ts`)
+This is a pure, documented function over `SellerOffer[]`, with no Torob field names, so it
+survives endpoint changes.
+
+1. In-person chip on and a priced in-store seller exists → cheapest in-store seller (حضوری).
+2. Only one usable online seller → that seller (فروشنده).
+3. **Recommended** («خرید با ضمانت ترب»). Best score among sellers that are:
+   - not an ad (and the product card isn't an ad slot either),
+   - covered by Torob purchase protection (`guarantee_info.status = enabled`),
+   - in stock with a reliable price,
+   - at most **15 % above the lowest usable price**.
+
+   `score = 0.7 × (lowest / price) + 0.3 × (shop_score / 5)`. A shop without a score gets the
+   neutral 2.5/5, never a bonus. Ties go to the lower price, then the name.
+4. Otherwise → the cheapest usable non-ad seller (ارزان‌ترین). It falls back to an ad only if
+   every seller is an ad.
+
+Wording rules kept: no ratings shown, no «اصل», and protection is always «ضمانت ترب»,
+never authenticity. An ad never carries the recommended label.
+
+## Caching and rate limiting (`lib/torob.ts`)
+- All Torob calls are made server-side in `/api/search`, `/api/product` and `/api/city`. URLs
+  come from env (`TOROB_SEARCH_URL`, `TOROB_DETAILS_URL`, `TOROB_CITY_REVERSE_URL`), plus
+  optional `TOROB_SEARCH_HEADERS` (JSON). Nothing upstream reaches the client bundle.
+- Each upstream URL is cached for 5 min in memory and on disk (`./.cache` locally,
+  `/tmp/.cache` on Vercel). Identical concurrent requests share one upstream call. Responses
+  also send `s-maxage=300` so Vercel's edge serves repeats.
+- Outbound calls go through one queue with **≥1 s between requests** and a 6 s timeout.
+  On Vercel the limit is per function instance. With the edge cache and a demo's traffic
+  this stays well under 1 req/s overall, but it is not a global guarantee.
+- Descriptive User-Agent that points at the repo.
+- **Fallback:** if the env is unset, upstream errors or it times out → your captured sample
+  (`data/torob-plp-data.json`), picked by keyword overlap with the query, with a visible
+  «داده‌ی نمونه» note. The page always renders.
+
+## Search UX
+- Debounce 300 ms. Each new query aborts the previous request (`AbortController` plus a request
+  id guard). The last good results stay on screen (dimmed, with a thin progress line) while the
+  next load runs. The skeleton grid appears only when there is nothing to show yet.
+- Paging uses infinite scroll (sentinel 600 px ahead) plus a «بیشتر» button as the fallback.
+- States: loading skeleton (the Figma بارگذاری card), results, empty («نتیجه‌ای پیدا نشد»), error
+  with retry.
+- The URL keeps `?q=` so a link opens the same search.
+- Chips: «خرید حضوری» toggles Torob's real `shop_type=offline` filter and switches cards to the
+  in-person seller. «مرتب‌سازی» uses Torob's own sort list from `filters2`. «فیلترها» offers
+  «فقط موجودها» and the categories Torob returns.
+
+## Location
+- With no location the row shows the Figma «بدون موقعیت» variant («تعیین»). Tapping uses the
+  browser's geolocation, rounds it to ~1 km, and resolves the city via Torob's reverse
+  geocoder → «موقعیت دقیق شما: تبریز».
+- In-person stores are shown with or without a location (Figma rule). Distance is shown only
+  when Torob returns one. Passing the user's position into the details call isn't wired
+  (the parameter isn't confirmed), so for now the in-person meta shows the store's city.
+
+## Design tokens
+- All colors, spacing and radii come from «ترب · توکن‌ها». Dark values come from the Dark frame.
+  Three dark tokens weren't defined in Figma and are derived: `skeleton #2a2c30`,
+  `badge-ad #3d3216` / text `#f2c661`, `state-pressed rgba(255,255,255,.06)`.
+- Icons are the Figma `Icon/*` SVGs, unmodified. Gray ones get a CSS tint in dark mode.
+- Product images load straight from `image.torob.com` (lazy) rather than through
+  `next/image`, so third-party images aren't proxied through Vercel.
+
+## Not wired (from the handoff)
+Analytics events `plp_card_view`, `plp_card_click {state, position}`, `plp_seller_click
+{seller_id, is_recommended}`, `plp_notify_me`. «خبرم کن» only changes its own text and saves nothing.

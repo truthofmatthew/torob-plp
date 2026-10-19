@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Torob PLP: redesign prototype on live data
 
-## Getting Started
+A phone-first, RTL recreation of Torob's search results page using the redesigned
+`ProductCard` from Figma. Torob's own top search bar and bottom navbar are kept exactly
+as they are on torob.com. The data is Torob's real public catalog, fetched server-side.
 
-First, run the development server:
+This is a hiring-challenge prototype, not an official Torob product.
+
+- `SCHEMA.md`: the real response fields and how they map
+- `DECISIONS.md`: the mapping, the featured-seller rule and its weights, caching and rate
+  limiting, and what was cut
+
+## Run locally
 
 ```bash
+cp .env.example .env.local   # fill in the endpoints
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without the env vars (or when Torob is unreachable) the page serves the captured sample
+in `data/torob-plp-data.json` and says so.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Layout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/api/search   GET ?q=&page=&sort=&inperson=1&available=1&category=
+app/api/product  GET ?id=<prk>&ad=1&inperson=1  → sellers + featured seller
+app/api/city     GET ?lat=&lon=                 → city name
+lib/torob.ts     server-only client: env URLs, 5-min cache, ≥1 s between calls
+lib/normalize.ts Torob JSON → Offer / SellerOffer
+lib/recommend.ts featured-seller rule (pure)
+components/      ProductCard (6 states), FilterBar, Sheet, SearchPage
+components/torob Torob's unchanged header + bottom nav
+```
