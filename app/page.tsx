@@ -9,8 +9,9 @@ import { getCategory, getSpecialOffers, getTrends } from "@/lib/catalog";
 // Torob's home: logo, search box, then what to search. Torob's own service
 // tiles (gold, TorobPay, nearby) belong to other products and are left out.
 
-// Rebuilt at most every 5 minutes, so visits don't each cost three Torob calls.
-export const revalidate = 300;
+// Rendered per request (not at build: the build machine can't reliably reach
+// Torob); lib/torob.ts's 5-minute cache keeps upstream calls the same.
+export const dynamic = "force-dynamic";
 export const metadata = { title: "ترب | بهترین قیمت بازار (نمونه‌ی بازطراحی)" };
 
 export default async function Home() {

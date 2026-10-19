@@ -107,7 +107,8 @@ header, bottom nav and inner-page title bar are copied unchanged (measured on to
   (`search-trends`), the first 8 root categories, the first special-offers row, and recently
   viewed from this device. Torob's service tiles (gold, TorobPay, nearby) belong to other
   products and were left out. A one-line footer says this is a prototype, not official
-  Torob. It is static and rebuilt every 5 min, so visits don't each cost three upstream calls.
+  Torob. Torob-backed pages render per request, not at build time, because Vercel's build
+  machine couldn't reliably reach Torob. The server's 5-min cache keeps upstream calls flat.
 - **Product (`/p/[id]`)** follows Torob's order: gallery → title + actions → buy box →
   sellers → specs → price history → similar.
   - The buy box uses the **same featured-seller rule as the card**: the big number is the

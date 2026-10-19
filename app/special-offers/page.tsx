@@ -4,7 +4,9 @@ import Shell from "@/components/Shell";
 import s from "@/components/home/home.module.css";
 import { getSpecialOffers } from "@/lib/catalog";
 
-export const revalidate = 300;
+// Rendered per request (not at build: the build machine can't reliably reach
+// Torob); lib/torob.ts's 5-minute cache keeps upstream calls the same.
+export const dynamic = "force-dynamic";
 export const metadata = { title: "پیشنهاد ویژه · ترب (نمونه)" };
 
 // Torob's «پیشنهاد ویژه»: titled rows of products, each a horizontal rail of

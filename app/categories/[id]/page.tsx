@@ -3,7 +3,9 @@ import CategoryList from "@/components/CategoryList";
 import Shell from "@/components/Shell";
 import { getCategory } from "@/lib/catalog";
 
-export const revalidate = 3600;
+// Rendered per request (not at build: the build machine can't reliably reach
+// Torob); lib/torob.ts's 5-minute cache keeps upstream calls the same.
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
