@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FeaturedSeller, Offer, ProductResponse, SearchResponse } from "@/lib/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFeaturedSellers } from "@/hooks/useFeaturedSellers";
+import type { Offer, SearchResponse } from "@/lib/types";
 import FilterBar from "./FilterBar";
 import ProductCard from "./ProductCard";
 import Sheet, { SheetOption } from "./Sheet";
@@ -11,7 +12,6 @@ import TorobHeader from "./torob/TorobHeader";
 import s from "./SearchPage.module.css";
 
 const DEBOUNCE_MS = 300;
-const ENRICH_CONCURRENCY = 2;
 
 // Torob's own sort list (filters2 → sort); used until the first live response.
 const DEFAULT_SORTS = [
@@ -25,10 +25,24 @@ const DEFAULT_SORTS = [
 type Status = "loading" | "ready" | "error";
 type Filters = { sort: string; inPerson: boolean; available: boolean; category: number };
 
-export default function SearchPage({ initialQuery }: { initialQuery: string }) {
+export default function SearchPage({
+  initialQuery,
+  initialCategory = 0,
+  categoryTitle,
+}: {
+  initialQuery: string;
+  /** Set on /browse/[id]: results for a category, with or without a query. */
+  initialCategory?: number;
+  categoryTitle?: string;
+}) {
   const [input, setInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<Filters>({ sort: "", inPerson: false, available: false, category: 0 });
+  const [filters, setFilters] = useState<Filters>({
+    sort: "",
+    inPerson: false,
+    available: false,
+    category: initialCategory,
+  });
 
   const [offers, setOffers] = useState<Offer[]>([]);
   const [page, setPage] = useState(0);
@@ -42,7 +56,6 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
     sortOptions: [],
   });
 
-  const [featured, setFeatured] = useState<Record<string, FeaturedSeller | null>>({});
   const [sheet, setSheet] = useState<"sort" | "filters" | null>(null);
   const [city, setCity] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -56,11 +69,13 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
     return () => clearTimeout(t);
   }, [input]);
 
+  // Keep the address shareable, Torob-style: /search?query=…
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (query) url.searchParams.set("q", query);
-    else url.searchParams.delete("q");
-    window.history.replaceState(null, "", url);
+    url.searchParams.delete("q");
+    if (query) url.searchParams.set("query", query);
+    else url.searchParams.delete("query");
+    window.history.replaceState(window.history.state, "", url);
   }, [query]);
 
   const buildUrl = useCallback(
@@ -82,7 +97,7 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
     searchAbort.current = ac;
     const id = ++reqId.current;
 
-    if (!query) {
+    if (!query && !filters.category) {
       setOffers([]);
       setHasMore(false);
       setStatus("ready");
@@ -110,7 +125,7 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
       if ((e as Error).name === "AbortError") return;
       if (id === reqId.current) setStatus("error");
     }
-  }, [query, buildUrl]);
+  }, [query, filters.category, buildUrl]);
 
   useEffect(() => {
     void runSearch();
@@ -150,59 +165,7 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
   }, [loadMore]);
 
   // ---- seller enrichment for visible cards (≤2 at a time) ---------------
-  const enrichKey = useCallback((o: Offer) => `${o.id}|${filters.inPerson ? 1 : 0}`, [filters.inPerson]);
-  const queue = useRef<Offer[]>([]);
-  const queued = useRef(new Set<string>());
-  const active = useRef(0);
-  const offersById = useMemo(() => new Map(offers.map((o) => [o.id, o])), [offers]);
-
-  const pump = useCallback(() => {
-    while (active.current < ENRICH_CONCURRENCY && queue.current.length) {
-      const o = queue.current.shift()!;
-      const key = enrichKey(o);
-      active.current++;
-      const u = new URLSearchParams({ id: o.id });
-      if (o.isAd) u.set("ad", "1");
-      if (filters.inPerson) u.set("inperson", "1");
-      fetch(`/api/product?${u}`)
-        .then((r) => (r.ok ? (r.json() as Promise<ProductResponse>) : null))
-        .then((d) => setFeatured((f) => ({ ...f, [key]: d?.featured ?? null })))
-        .catch(() => setFeatured((f) => ({ ...f, [key]: null })))
-        .finally(() => {
-          active.current--;
-          pump();
-        });
-    }
-  }, [enrichKey, filters.inPerson]);
-
-  useEffect(() => {
-    // New filter context → drop pending work for the old one.
-    queue.current = [];
-    queued.current.clear();
-  }, [filters.inPerson, query]);
-
-  const grid = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const root = grid.current;
-    if (!root) return;
-    const io = new IntersectionObserver(
-      (ents) => {
-        for (const e of ents) {
-          if (!e.isIntersecting) continue;
-          const o = offersById.get((e.target as HTMLElement).dataset.id ?? "");
-          if (!o || !o.available) continue;
-          const key = enrichKey(o);
-          if (queued.current.has(key)) continue;
-          queued.current.add(key);
-          queue.current.push(o);
-        }
-        pump();
-      },
-      { rootMargin: "200px 0px" },
-    );
-    root.querySelectorAll<HTMLElement>("[data-id]").forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [offersById, enrichKey, pump]);
+  const { gridRef: grid, featuredFor } = useFeaturedSellers(offers, filters.inPerson);
 
   // ---- location ---------------------------------------------------------
   const locate = () => {
@@ -236,6 +199,12 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
       <TorobHeader value={input} onChange={setInput} onSubmit={() => setQuery(input.trim())} />
 
       <main className={s.main}>
+        {categoryTitle && (
+          <h1 className={s.categoryTitle}>
+            {categoryTitle}
+            {meta.total > 0 && <span> · {meta.total.toLocaleString("fa-IR")} کالا</span>}
+          </h1>
+        )}
         <FilterBar
           inPerson={filters.inPerson}
           sortLabel={sortLabel}
@@ -283,7 +252,7 @@ export default function SearchPage({ initialQuery }: { initialQuery: string }) {
               ? Array.from({ length: 6 }, (_, i) => <ProductCard key={i} loading />)
               : offers.map((o, i) => (
                   <div key={o.id} data-id={o.id} className={s.cell}>
-                    <ProductCard offer={o} featured={featured[enrichKey(o)]} position={i} />
+                    <ProductCard offer={o} featured={featuredFor(o)} position={i} />
                   </div>
                 ))}
             {loadingMore && [0, 1].map((i) => <ProductCard key={`more-${i}`} loading />)}

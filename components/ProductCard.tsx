@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { faDigits, faPrice } from "@/lib/format";
 import type { CardState, FeaturedSeller, Offer } from "@/lib/types";
@@ -85,7 +86,7 @@ function LoadedCard({
 
   return (
     <article className={s.card} data-state={state}>
-      <a className={s.cover} href={offer.productUrl} target="_blank" rel="noopener" aria-label={ariaLabel} />
+      <Link className={s.cover} href={offer.productUrl} aria-label={ariaLabel} prefetch={false} />
 
       <div className={s.media}>
         {showImage ? (

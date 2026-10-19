@@ -6,6 +6,19 @@
   padding-bottom: calc(var(--torob-nav-h) + env(safe-area-inset-bottom) + 16px);
 }
 
+.categoryTitle {
+  padding: 12px 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 24px;
+  background: var(--color-surface-card);
+}
+.categoryTitle span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+}
+
 /* Grid: two columns, card width FILL, gap 8, margin 12. */
 .grid {
   display: grid;
