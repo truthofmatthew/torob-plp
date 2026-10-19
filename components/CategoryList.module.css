@@ -1,0 +1,38 @@
+.list {
+  background: var(--color-surface-card);
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-primary);
+}
+.title[data-strong] {
+  font-weight: 600;
+  color: var(--color-brand-primary);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .icon {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}
