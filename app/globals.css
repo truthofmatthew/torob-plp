@@ -17,6 +17,9 @@
   --color-badge-ad-text: #8a6100;
   --color-success: #137333;
   --color-state-pressed: rgba(0, 0, 0, 0.05);
+  /* Price-history series; validated (dataviz checker) against card surfaces. */
+  --chart-lowest: #c4223a;
+  --chart-median: #2b6cd4;
 
   --space-2: 2px;
   --space-4: 4px;
@@ -48,6 +51,8 @@
     --color-badge-ad-text: #f2c661;
     --color-success: #5bb974;
     --color-state-pressed: rgba(255, 255, 255, 0.06);
+    --chart-lowest: #e8495f;
+    --chart-median: #4c8ff0;
     color-scheme: dark;
   }
 }
