@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { faDigits } from "@/lib/format";
+import { thumb } from "@/lib/img";
 import s from "./product.module.css";
 
 export default function Gallery({ images, title }: { images: string[]; title: string }) {
@@ -31,7 +32,16 @@ export default function Gallery({ images, title }: { images: string[]; title: st
       >
         {images.map((src, i) => (
           <div key={src} className={s.slide}>
-            <img src={src} alt={i === 0 ? title : ""} loading={i === 0 ? "eager" : "lazy"} decoding="async" />
+            <img
+              src={thumb(src, 720)!}
+              alt={i === 0 ? title : ""}
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
+              onError={(e) => {
+                // Resized variant failed: fall back to the original once.
+                if (e.currentTarget.src !== src) e.currentTarget.src = src;
+              }}
+            />
           </div>
         ))}
       </div>

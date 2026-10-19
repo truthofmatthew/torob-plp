@@ -5,6 +5,7 @@ import s from "@/components/home/home.module.css";
 import ProductGrid from "@/components/ProductGrid";
 import TorobBottomNav from "@/components/torob/TorobBottomNav";
 import { getCategory, getSpecialOffers, getTrends } from "@/lib/catalog";
+import { thumb } from "@/lib/img";
 
 // Torob's home: logo, search box, then what to search. Torob's own service
 // tiles (gold, TorobPay, nearby) belong to other products and are left out.
@@ -35,7 +36,7 @@ export default async function Home() {
               {trends.slice(0, 12).map((t) => (
                 <li key={t.query}>
                   <Link href={`/search?query=${encodeURIComponent(t.query)}`} prefetch={false}>
-                    {t.offer?.imageUrl && <img src={t.offer.imageUrl} alt="" width={28} height={28} loading="lazy" />}
+                    {t.offer?.imageUrl && <img src={thumb(t.offer.imageUrl, 64)!} alt="" width={28} height={28} loading="lazy" />}
                     <span>{t.query}</span>
                   </Link>
                 </li>
