@@ -27,7 +27,7 @@ export function sampleFlights(from: string, to: string, party: Party, sellerUrl:
     return {
       groups: [],
       offerCount: 0,
-      note: `داده‌ی نمونه فقط برای مسیرهای ${sampleRoutes().map((r) => r.split("-").map(cityOf).join("→")).join("، ")} ذخیره شده است.`,
+      note: `داده‌ی نمونه فقط برای مسیرهای ${sampleRoutes().map((r) => r.split("-").map(cityOf).join(" ← ")).join("، ")} ذخیره شده است.`,
     };
   }
   const n = normalizeFlights({ result: route }, { party, sellerUrl });
