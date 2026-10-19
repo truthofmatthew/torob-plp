@@ -1,0 +1,82 @@
+.wrap {
+  background: var(--color-surface-card);
+}
+
+/* Filters: 48 tall, chips 36, gap 8, 12 side padding, right-aligned (RTL start). */
+.chips {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 0 12px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+/* Torob's header ends in a 1px rule, so the chips get 8px air above them. */
+.chips {
+  padding-top: 8px;
+}
+
+.chip {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+}
+
+.chip[data-active] {
+  color: var(--color-brand-primary);
+  background: var(--color-brand-subtle);
+  border-color: var(--color-brand-primary);
+}
+
+/* Location: 61 tall, 12 padding, gap 8, top border. */
+.location {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.locText {
+  flex: 1 0 0;
+  min-width: 1px;
+  overflow: clip;
+}
+
+.locTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--color-text-primary);
+}
+
+.locSub {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--color-text-tertiary);
+}
+
+.locAction {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--color-brand-primary);
+  text-align: left;
+}
