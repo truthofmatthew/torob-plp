@@ -8,7 +8,7 @@ import path from "node:path";
 
 const TTL_MS = 5 * 60 * 1000;
 const MIN_GAP_MS = 1000;
-const TIMEOUT_MS = 6000;
+const TIMEOUT_MS = 10000;
 const USER_AGENT =
   "TorobPLP-Prototype/0.1 (hiring-challenge demo; read-only; +https://github.com/truthofmatthew/torob-plp)";
 
@@ -76,6 +76,34 @@ async function takeSlot() {
   if (at > now) await new Promise((r) => setTimeout(r, at - now));
 }
 
+/**
+ * One GET, retried once on a timeout, network error or 5xx. Each attempt
+ * takes its own rate-limit slot. 4xx is final (bad id, gone).
+ */
+async function fetchWithRetry(href: string): Promise<unknown> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await takeSlot();
+    try {
+      const res = await fetch(href, {
+        headers: { Accept: "application/json", ...extraHeaders(), "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        cache: "no-store",
+      });
+      if (res.status >= 400 && res.status < 500) throw new UpstreamUnavailable(`upstream ${res.status}`);
+      if (!res.ok) {
+        lastError = new UpstreamUnavailable(`upstream ${res.status}`);
+        continue;
+      }
+      return (await res.json()) as unknown;
+    } catch (e) {
+      if (e instanceof UpstreamUnavailable) throw e;
+      lastError = e;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new UpstreamUnavailable("upstream failed");
+}
+
 /** GET JSON from Torob with cache + rate limit. Returns where it came from. */
 export async function getJson(url: URL): Promise<{ body: unknown; source: "live" | "cache" }> {
   const href = url.toString();
@@ -91,14 +119,7 @@ export async function getJson(url: URL): Promise<{ body: unknown; source: "live"
   let p = inflight.get(key);
   if (!p) {
     p = (async () => {
-      await takeSlot();
-      const res = await fetch(href, {
-        headers: { Accept: "application/json", ...extraHeaders(), "User-Agent": USER_AGENT },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-        cache: "no-store",
-      });
-      if (!res.ok) throw new UpstreamUnavailable(`upstream ${res.status}`);
-      const body: unknown = await res.json();
+      const body = await fetchWithRetry(href);
       const entry = { at: Date.now(), body };
       memory.set(key, entry);
       void writeDisk(key, entry);

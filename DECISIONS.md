@@ -55,7 +55,7 @@ never authenticity. An ad never carries the recommended label.
 - Each upstream URL is cached for 5 min in memory and on disk (`./.cache` locally,
   `/tmp/.cache` on Vercel). Identical concurrent requests share one upstream call. Responses
   also send `s-maxage=300` so Vercel's edge serves repeats.
-- Outbound calls go through one queue with **≥1 s between requests** and a 6 s timeout.
+- Outbound calls go through one queue with **≥1 s between requests**, a 10 s timeout and one retry on timeouts/5xx.
   On Vercel the limit is per function instance. With the edge cache and a demo's traffic
   this stays well under 1 req/s overall, but it is not a global guarantee.
 - Descriptive User-Agent that points at the repo.
@@ -135,3 +135,4 @@ header, bottom nav and inner-page title bar are copied unchanged (measured on to
 New env vars, all server-side: `TOROB_SIMILAR_URL`, `TOROB_PRICE_CHART_URL`,
 `TOROB_CATEGORY_URL`, `TOROB_OFFERS_URL`, `TOROB_TRENDS_URL`. Each degrades gracefully when
 unset: a section hides or the sample is shown.
+- Functions run in `fra1` (Frankfurt), the closest Vercel region to Torob, which cuts upstream latency and timeouts.
