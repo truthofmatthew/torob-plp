@@ -9,13 +9,19 @@ export default function Shell({
   header,
   children,
 }: {
-  header: { kind: "search"; initial?: string; back?: boolean } | { kind: "title"; title: string; backHref?: string } | { kind: "none" };
+  header:
+    | { kind: "search"; initial?: string; back?: boolean }
+    | { kind: "title"; title: string; backHref?: string }
+    /** A page's own wrapper around Torob's search header (same height and padding). */
+    | { kind: "custom"; node: React.ReactNode }
+    | { kind: "none" };
   children: React.ReactNode;
 }) {
   return (
     <>
       {header.kind === "search" && <SearchHeaderLink initial={header.initial} back={header.back} />}
-      <main className={s.main} data-header={header.kind}>
+      {header.kind === "custom" && header.node}
+      <main className={s.main} data-header={header.kind === "custom" ? "search" : header.kind}>
         {header.kind === "title" && <TorobTitleBar title={header.title} backHref={header.backHref} />}
         {children}
       </main>

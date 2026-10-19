@@ -2,13 +2,15 @@ import Link from "next/link";
 import HomeSearch from "@/components/home/HomeSearch";
 import RecentRail from "@/components/home/RecentRail";
 import s from "@/components/home/home.module.css";
+import f from "@/components/flights/flights.module.css";
 import ProductGrid from "@/components/ProductGrid";
 import TorobBottomNav from "@/components/torob/TorobBottomNav";
 import { getCategory, getSpecialOffers, getTrends } from "@/lib/catalog";
 import { thumb } from "@/lib/img";
 
 // Torob's home: logo, search box, then what to search. Torob's own service
-// tiles (gold, TorobPay, nearby) belong to other products and are left out.
+// tiles (gold, TorobPay, nearby) belong to other products and are left out;
+// the one tile here is this prototype's flight vertical, «ترب بلیت».
 
 // Rendered per request (not at build: the build machine can't reliably reach
 // Torob); lib/torob.ts's 5-minute cache keeps upstream calls the same.
@@ -26,6 +28,19 @@ export default async function Home() {
           <TorobLogo />
           <HomeSearch />
         </div>
+
+        <Link href="/flights" className={f.tile} prefetch={false}>
+          <span className={f.tileIcon} aria-hidden>
+            ✈
+          </span>
+          <span className={f.tileText}>
+            <span className={f.tileTitle}>ترب بلیت</span>
+            <span className={f.tileSub}>بلیت هواپیما: همه‌ی پیشنهادهای هر پرواز، با قوانین استرداد و بار</span>
+          </span>
+          <span className={f.tileArrow} aria-hidden>
+            ‹
+          </span>
+        </Link>
 
         {trends.length > 0 && (
           <section className={s.section}>

@@ -17,7 +17,9 @@ import type { FlightFare, FlightGroup, Party } from "./types";
  *    - cheapest: lowest party total.
  *    - fastest: shortest flight, then price.
  *    - refundable: only flights with a fare whose early-cancellation penalty is
- *      ≤ REFUNDABLE_MAX_PENALTY; cheapest such fare first.
+ *      ≤ REFUNDABLE_MAX_PENALTY; the card features its cheapest such fare. Cards
+ *      whose fare is low-penalty (≤30%) come before partial ones, then cheapest:
+ *      whoever taps this chip is paying for flexibility.
  *    - morning / evening: only departures inside WINDOWS, then by SCORE.
  * 3. SCORE (per fare, 0..1) = Σ WEIGHTS × term:
  *    - price    = cheapest party total in the results / this fare's total
@@ -188,13 +190,14 @@ export function rankFlights(
 
   const dep = (a: RankedFlight, b: RankedFlight) => a.group.departure.localeCompare(b.group.departure);
   const total = (r: RankedFlight) => (r.featured ?? r.lowest).total;
+  const tier = (r: RankedFlight) => (r.featured?.refund.kind === "low" ? 0 : 1);
   const sorters: Record<Intent, (a: RankedFlight, b: RankedFlight) => number> = {
     best: (a, b) => b.score - a.score || total(a) - total(b) || dep(a, b),
     morning: (a, b) => b.score - a.score || total(a) - total(b) || dep(a, b),
     evening: (a, b) => b.score - a.score || total(a) - total(b) || dep(a, b),
     cheapest: (a, b) => a.lowest.total - b.lowest.total || dep(a, b),
     fastest: (a, b) => a.group.durationMin - b.group.durationMin || a.lowest.total - b.lowest.total || dep(a, b),
-    refundable: (a, b) => total(a) - total(b) || dep(a, b),
+    refundable: (a, b) => tier(a) - tier(b) || total(a) - total(b) || dep(a, b),
   };
   flights = flights.sort(sorters[intent]);
 
