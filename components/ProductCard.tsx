@@ -76,7 +76,7 @@ function LoadedCard({
     if (!seller) return "";
     const p = faPrice(seller.price);
     if (state === "inperson") return `${p} تومان · ${seller.distance || seller.city}`;
-    if (seller.protectedPurchase) return `${p} با ضمانت`;
+    if (seller.protectedPurchase) return `${p} تومان با ضمانت`;
     return seller.city ? `${p} تومان · ${seller.city}` : `${p} تومان`;
   })();
 
