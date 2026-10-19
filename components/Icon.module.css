@@ -1,0 +1,10 @@
+.icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .neutral {
+    filter: invert(1) brightness(1.4);
+  }
+}
