@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-// Server-side client for Torob's public catalog. Endpoints come from env only.
+// Server-side client for every upstream (Torob's public catalog, the flight
+// source). Endpoints come from env only.
 // Good-client rules: descriptive UA, 5-min cache (memory + disk), ≤1 req/s.
 
 const TTL_MS = 5 * 60 * 1000;
@@ -17,6 +18,13 @@ const CACHE_DIR = process.env.VERCEL ? "/tmp/.cache" : path.join(process.cwd(), 
 
 export class UpstreamUnavailable extends Error {}
 
+/** Thrown by a `cached()` loader to hand back a result that must not be cached. */
+export class NotCacheable extends Error {
+  constructor(public body: unknown) {
+    super("not cacheable");
+  }
+}
+
 export type EndpointName =
   | "TOROB_SEARCH_URL"
   | "TOROB_DETAILS_URL"
@@ -24,7 +32,9 @@ export type EndpointName =
   | "TOROB_PRICE_CHART_URL"
   | "TOROB_CATEGORY_URL"
   | "TOROB_OFFERS_URL"
-  | "TOROB_TRENDS_URL";
+  | "TOROB_TRENDS_URL"
+  | "FLIGHTS_SEARCH_URL"
+  | "FLIGHTS_CALENDAR_URL";
 
 export function endpoint(name: EndpointName): URL {
   const v = process.env[name];
@@ -32,8 +42,10 @@ export function endpoint(name: EndpointName): URL {
   return new URL(v);
 }
 
-function extraHeaders(): Record<string, string> {
-  const raw = process.env.TOROB_SEARCH_HEADERS;
+type HeadersEnv = "TOROB_SEARCH_HEADERS" | "FLIGHTS_SEARCH_HEADERS";
+
+function extraHeaders(name: HeadersEnv): Record<string, string> {
+  const raw = process.env[name];
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
@@ -76,17 +88,28 @@ async function takeSlot() {
   if (at > now) await new Promise((r) => setTimeout(r, at - now));
 }
 
+/** A JSON POST body, plus which env var holds extra headers for this upstream. */
+export type RequestOptions = { body?: unknown; headersEnv?: HeadersEnv };
+
 /**
- * One GET, retried once on a timeout, network error or 5xx. Each attempt
- * takes its own rate-limit slot. 4xx is final (bad id, gone).
+ * One GET (or POST with a JSON body), retried once on a timeout, network error
+ * or 5xx. Each attempt takes its own rate-limit slot. 4xx is final (bad id, gone).
  */
-async function fetchWithRetry(href: string): Promise<unknown> {
+async function fetchWithRetry(href: string, opts: RequestOptions = {}): Promise<unknown> {
+  const isPost = opts.body !== undefined;
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     await takeSlot();
     try {
       const res = await fetch(href, {
-        headers: { Accept: "application/json", ...extraHeaders(), "User-Agent": USER_AGENT },
+        method: isPost ? "POST" : "GET",
+        body: isPost ? JSON.stringify(opts.body) : undefined,
+        headers: {
+          Accept: "application/json",
+          ...(isPost ? { "Content-Type": "application/json" } : {}),
+          ...extraHeaders(opts.headersEnv ?? "TOROB_SEARCH_HEADERS"),
+          "User-Agent": USER_AGENT,
+        },
         signal: AbortSignal.timeout(TIMEOUT_MS),
         cache: "no-store",
       });
@@ -107,7 +130,23 @@ async function fetchWithRetry(href: string): Promise<unknown> {
 /** GET JSON from Torob with cache + rate limit. Returns where it came from. */
 export async function getJson(url: URL): Promise<{ body: unknown; source: "live" | "cache" }> {
   const href = url.toString();
-  const key = keyOf(href);
+  return cached(href, () => fetchWithRetry(href));
+}
+
+/** One uncached request through the same queue, timeout and retry (e.g. a POST that starts a search). */
+export function requestJson(url: URL, opts: RequestOptions = {}): Promise<unknown> {
+  return fetchWithRetry(url.toString(), opts);
+}
+
+/**
+ * Cache + in-flight dedupe around any loader, keyed by `cacheKey`. A loader
+ * can throw `NotCacheable` to return a value without storing it (partial results).
+ */
+export async function cached(
+  cacheKey: string,
+  load: () => Promise<unknown>,
+): Promise<{ body: unknown; source: "live" | "cache" }> {
+  const key = keyOf(cacheKey);
 
   const hit = memory.get(key) ?? (await readDisk(key));
   if (hit && Date.now() - hit.at < TTL_MS) {
@@ -119,7 +158,13 @@ export async function getJson(url: URL): Promise<{ body: unknown; source: "live"
   let p = inflight.get(key);
   if (!p) {
     p = (async () => {
-      const body = await fetchWithRetry(href);
+      let body: unknown;
+      try {
+        body = await load();
+      } catch (e) {
+        if (e instanceof NotCacheable) return e.body;
+        throw e;
+      }
       const entry = { at: Date.now(), body };
       memory.set(key, entry);
       void writeDisk(key, entry);

@@ -15,34 +15,34 @@ const KEY: Record<SavedKind, string> = {
   history: "torob-plp:history",
 };
 const LIMIT: Record<SavedKind, number> = { likes: 200, alerts: 200, history: 40 };
-const EMPTY: SavedProduct[] = [];
 
 const listeners = new Set<() => void>();
-const cache = new Map<SavedKind, { raw: string | null; list: SavedProduct[] }>();
+const cache = new Map<string, { raw: string | null; list: unknown[] }>();
+const EMPTY: never[] = [];
 
-function read(kind: SavedKind): SavedProduct[] {
+function read<T>(key: string): T[] {
   let raw: string | null = null;
   try {
-    raw = window.localStorage.getItem(KEY[kind]);
+    raw = window.localStorage.getItem(key);
   } catch {
     return EMPTY;
   }
-  const hit = cache.get(kind);
-  if (hit && hit.raw === raw) return hit.list;
-  let list = EMPTY;
+  const hit = cache.get(key);
+  if (hit && hit.raw === raw) return hit.list as T[];
+  let list: T[] = EMPTY;
   try {
-    const parsed = raw ? (JSON.parse(raw) as SavedProduct[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as T[]) : [];
     list = Array.isArray(parsed) ? parsed : EMPTY;
   } catch {
     list = EMPTY;
   }
-  cache.set(kind, { raw, list });
+  cache.set(key, { raw, list });
   return list;
 }
 
-function write(kind: SavedKind, list: SavedProduct[]) {
+function write<T>(key: string, list: T[], limit: number) {
   try {
-    window.localStorage.setItem(KEY[kind], JSON.stringify(list.slice(0, LIMIT[kind])));
+    window.localStorage.setItem(key, JSON.stringify(list.slice(0, limit)));
   } catch {
     // storage full or blocked; the UI keeps working without persistence
   }
@@ -57,6 +57,28 @@ function subscribe(l: () => void) {
     listeners.delete(l);
     window.removeEventListener("storage", onStorage);
   };
+}
+
+/**
+ * A list of `{ id }` items in localStorage under `torob-plp:<name>`, newest
+ * first, capped at `limit`. Shared by product likes/alerts/history and the
+ * flight vertical's recent searches and saved flights.
+ */
+export function useStoredList<T extends { id: string }>(name: string, limit: number) {
+  const key = `torob-plp:${name}`;
+  const list = useSyncExternalStore(
+    subscribe,
+    () => read<T>(key),
+    () => EMPTY as T[],
+  );
+  const has = useCallback((id: string) => list.some((p) => p.id === id), [list]);
+  const add = useCallback(
+    (p: T) => write(key, [p, ...read<T>(key).filter((x) => x.id !== p.id)], limit),
+    [key, limit],
+  );
+  const remove = useCallback((id: string) => write(key, read<T>(key).filter((x) => x.id !== id), limit), [key, limit]);
+  const clear = useCallback(() => write(key, [], limit), [key, limit]);
+  return { list, has, add, remove, clear };
 }
 
 export function toSaved(o: Pick<Offer, "id" | "title" | "imageUrl" | "minPrice" | "storeCount" | "available">): SavedProduct {
@@ -88,17 +110,5 @@ export function savedToOffer(s: SavedProduct): Offer {
 }
 
 export function useSaved(kind: SavedKind) {
-  const list = useSyncExternalStore(
-    subscribe,
-    () => read(kind),
-    () => EMPTY,
-  );
-  const has = useCallback((id: string) => list.some((p) => p.id === id), [list]);
-  const add = useCallback(
-    (p: SavedProduct) => write(kind, [p, ...read(kind).filter((x) => x.id !== p.id)]),
-    [kind],
-  );
-  const remove = useCallback((id: string) => write(kind, read(kind).filter((x) => x.id !== id)), [kind]);
-  const clear = useCallback(() => write(kind, []), [kind]);
-  return { list, has, add, remove, clear };
+  return useStoredList<SavedProduct>(KEY[kind].slice("torob-plp:".length), LIMIT[kind]);
 }
