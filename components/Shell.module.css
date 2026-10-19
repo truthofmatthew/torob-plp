@@ -1,0 +1,17 @@
+.main {
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding-bottom: calc(var(--torob-nav-h) + env(safe-area-inset-bottom) + 16px);
+}
+
+.empty {
+  padding: 48px 24px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.main[data-header="search"] {
+  padding-top: var(--torob-header-h);
+}

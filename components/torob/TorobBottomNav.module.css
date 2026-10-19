@@ -37,10 +37,22 @@
   height: 30.5px;
 }
 
+.icon svg {
+  fill: #1e293b;
+}
+
 .label {
   height: 15.5px;
   font-size: 11px;
   font-weight: 700;
   line-height: 15.5px;
   color: #1e293b;
+}
+
+/* Torob's active tab: var(--red-500). */
+.link[data-active] .icon svg {
+  fill: rgb(215, 0, 64);
+}
+.link[data-active] .label {
+  color: rgb(215, 0, 64);
 }
